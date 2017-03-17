@@ -471,6 +471,9 @@ core-deps-apps-local-deps: build clean
 	$i "Add a lager:error/2 call to my_app_1_app.erl that will fail if the parse_transform doesn't run"
 	$t perl -ni.bak -e 'print;if (/^-export/){print "\n-export([log/0]).\n"} if (eof) {print "\nlog() -> lager:error(\"test\", []).\n"}' $(APP)/apps/my_app_1/src/my_app_1_app.erl
 
+	$i "Add a behaviour module to my_app_1"
+	$t echo -e '-module(person).\n-callback init() -> atom().' > $(APP)/apps/my_app_1/src/person.erl
+
 	$i "Create a new application my_app_2"
 	$t $(MAKE) -C $(APP) new-app in=my_app_2 $v
 
@@ -479,6 +482,9 @@ core-deps-apps-local-deps: build clean
 
 	$i "Add a lager:error/2 call to my_app_2_app.erl that will fail if the parse_transform doesn't run"
 	$t perl -ni.bak -e 'print;if (/^-export/){print "\n-export([log/0]).\n"} if (eof) {print "\nlog() -> lager:error(\"test\", []).\n"}' $(APP)/apps/my_app_2/src/my_app_2_app.erl
+
+	$i "Add a module depending on the behaviour module of my_app_1 to my_app_2"
+	$t echo -e '-module(boy).\n-export[init/0].\ninit() -> boy.' > $(APP)/apps/my_app_2/src/boy.erl
 
 	$i "Build the application"
 	$t $(MAKE) -C $(APP) $v
@@ -490,10 +496,12 @@ core-deps-apps-local-deps: build clean
 	$t test -f $(APP)/apps/my_app_1/ebin/my_app_1.app
 	$t test -f $(APP)/apps/my_app_1/ebin/my_app_1_app.beam
 	$t test -f $(APP)/apps/my_app_1/ebin/my_app_1_sup.beam
+	$t test -f $(APP)/apps/my_app_1/ebin/person.beam
 	$t test -f $(APP)/apps/my_app_2/my_app_2.d
 	$t test -f $(APP)/apps/my_app_2/ebin/my_app_2.app
 	$t test -f $(APP)/apps/my_app_2/ebin/my_app_2_app.beam
 	$t test -f $(APP)/apps/my_app_2/ebin/my_app_2_sup.beam
+	$t test -f $(APP)/apps/my_app_1/ebin/boy.beam
 	$t test -f $(APP)/deps/lager/ebin/lager.app
 
 	$i "Distclean the application"
